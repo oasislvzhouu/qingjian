@@ -4,13 +4,16 @@ use qingjian_platform::CandidateRenderer;
 use qingjian_platform::protocol::{Frame, ScreenRect};
 
 /// 候选窗口 / 状态条的画法。
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct RenderSettings {
     /// 由谁画（`[general] renderer`）。
     pub renderer: CandidateRenderer,
 
     /// 字族名（`[general] font`），空为系统字体。
     pub font: String,
+
+    /// 字号缩放（`[general] font_scale`），1.0 为默认。
+    pub font_scale: f32,
 }
 
 /// Router 只产出帧，画交给它；Windows 上由 UI 线程实现。

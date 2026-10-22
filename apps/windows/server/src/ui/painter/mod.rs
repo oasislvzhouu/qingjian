@@ -21,11 +21,15 @@ pub(super) struct Painter {
 
     /// 建它时用的字族名（空为系统字体），设置没变就不重建。
     font: String,
+
+    /// 建它时用的字号缩放，设置没变就不重建。
+    font_scale: f32,
 }
 
 impl Painter {
-    /// `font` 是用户选的字族名，空为系统字体；没装就回到系统字体。字体库加载失败返回 `None`，调用方退回 GDI。
-    fn new(font: &str) -> Option<Self> {
+    /// `font` 是用户选的字族名，空为系统字体；没装就回到系统字体。`font_scale` 是字号缩放（1.0 为默认）。
+    /// 字体库加载失败返回 `None`，调用方退回 GDI。
+    fn new(font: &str, font_scale: f32) -> Option<Self> {
         let started = std::time::Instant::now();
         let library = if font.is_empty() {
             FontLibrary::system("zh-CN")
@@ -51,6 +55,7 @@ impl Painter {
         Some(Self {
             renderer: Renderer::new(library),
             font: font.to_owned(),
+            font_scale,
         })
     }
 
@@ -59,8 +64,11 @@ impl Painter {
         let mut painter = shared.borrow_mut();
         match settings.renderer {
             CandidateRenderer::Qingjian => {
-                if painter.as_ref().map(|p| p.font.as_str()) != Some(settings.font.as_str()) {
-                    *painter = Self::new(&settings.font);
+                let unchanged = painter
+                    .as_ref()
+                    .is_some_and(|p| p.font.as_str() == settings.font.as_str() && p.font_scale == settings.font_scale);
+                if !unchanged {
+                    *painter = Self::new(&settings.font, settings.font_scale);
                 }
             }
             CandidateRenderer::System => {
@@ -87,7 +95,7 @@ impl Painter {
         let started = std::time::Instant::now();
         let rendered = self
             .renderer
-            .render(frame, layout, &theme(dark), scale(dpi), Some(&SHADOW))
+            .render(frame, layout, &theme(dark, self.font_scale), scale(dpi), Some(&SHADOW))
             .inspect_err(|error| tracing::warn!(%error, "候选窗渲染失败"))
             .ok()?;
         tracing::debug!(
@@ -107,7 +115,7 @@ impl Painter {
         dpi: u32,
     ) -> Option<RenderedStatus> {
         self.renderer
-            .render_status(cells, &theme(dark), scale(dpi), Some(&SHADOW))
+            .render_status(cells, &theme(dark, self.font_scale), scale(dpi), Some(&SHADOW))
             .inspect_err(|error| tracing::warn!(%error, "状态条渲染失败"))
             .ok()
     }
@@ -116,8 +124,11 @@ impl Painter {
 /// 两个窗口都用渲染器画阴影（分层窗口没有系统阴影），参数与 macOS 面板一致。
 const SHADOW: Shadow = Shadow::mac_panel();
 
-fn theme(dark: bool) -> Theme {
-    if dark { Theme::dark() } else { Theme::light() }
+fn theme(dark: bool, font_scale: f32) -> Theme {
+    // 写歪的缩放夹回合理范围，负数或 0 会把字号乘没。
+    let factor = font_scale.clamp(0.5, 3.0);
+    let theme = if dark { Theme::dark() } else { Theme::light() };
+    theme.scaled(factor)
 }
 
 /// 点 → 像素的倍数。

@@ -7,7 +7,7 @@ use qingjian_platform::{
 use super::RenderSettings;
 
 /// Router 要用的配置项，与 macOS 壳的 `Host` 字段对齐。
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct RouterConfig {
     /// 每页候选数（`[general] page_size`）。
     pub page_size: usize,
@@ -30,6 +30,9 @@ pub struct RouterConfig {
 
     /// 候选窗口字体的字族名（`[general] font`），空为系统字体；只对青简渲染器生效。
     pub font: String,
+
+    /// 字号缩放（`[general] font_scale`），1.0 为默认；只对青简渲染器生效。
+    pub font_scale: f32,
 
     /// 拼音显示位置（`[general] preedit`）。
     pub preedit: PreeditMode,
@@ -98,6 +101,7 @@ impl RouterConfig {
         RenderSettings {
             renderer: self.renderer,
             font: self.font.clone(),
+            font_scale: self.font_scale,
         }
     }
 }
@@ -112,6 +116,7 @@ impl From<&Config> for RouterConfig {
             theme: config.general.theme,
             renderer: config.general.renderer,
             font: config.general.font.trim().to_owned(),
+            font_scale: config.general.font_scale,
             preedit: config.general.preedit,
             page_keys: config.general.page_keys(),
             english_candidates: config.general.english_candidates,

@@ -53,6 +53,15 @@ impl Theme {
         Self::with_palette(Palette::dark(), 0.75)
     }
 
+    /// 等比缩放三档字号（配置项 `[general] font_scale`）：字号与行高一起乘，间距与配色不动。
+    pub fn scaled(mut self, factor: f32) -> Self {
+        self.text_font = FontSpec::new(self.text_font.size * factor, self.text_font.line_height * factor);
+        self.annotation_font =
+            FontSpec::new(self.annotation_font.size * factor, self.annotation_font.line_height * factor);
+        self.index_font = FontSpec::new(self.index_font.size * factor, self.index_font.line_height * factor);
+        self
+    }
+
     fn with_palette(colors: Palette, text_gamma: f32) -> Self {
         Self {
             // 行高取 AppKit 系统字体在这几个字号下 NSAttributedString.size() 的高度

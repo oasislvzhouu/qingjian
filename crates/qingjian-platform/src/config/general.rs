@@ -19,7 +19,7 @@ pub const DEFAULT_PAGE_KEYS: (char, char) = ('[', ']');
 /// `learning_language` 写这个值表示不显示译文。
 pub const LEARNING_LANGUAGE_OFF: &str = "off";
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct GeneralConfig {
     /// 学习语言（ISO 639-1，`en` / `ja` / `es`；`off` 不显示译文）：候选旁显示哪种语言的译文。要有对应的释义表文件才生效。
@@ -45,6 +45,9 @@ pub struct GeneralConfig {
 
     /// 候选窗口字体的字族名；空为系统字体。只对青简渲染器生效，没装这个字体时回到系统字体。
     pub font: String,
+
+    /// 候选窗口字号缩放：1.0 为默认大小，等比放大 / 缩小三档字号（候选正文 / 译文 / 序号）。只对青简渲染器生效。
+    pub font_scale: f32,
 
     /// 组句中的拼音显示在行内、候选窗口还是两处都显示。
     pub preedit: PreeditMode,
@@ -127,6 +130,7 @@ impl Default for GeneralConfig {
             horizontal_grid: false,
             renderer: CandidateRenderer::default(),
             font: String::new(),
+            font_scale: 1.0,
             preedit: PreeditMode::default(),
             english_candidates: true,
             traditional: false,
